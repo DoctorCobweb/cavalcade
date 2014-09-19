@@ -32,14 +32,24 @@ fs.readFile(GVIRS_NEW_PEOPLE_FILE, {encoding:'utf-8'}, function (err, data) {
     console.log('successfully parsed gvirs new people file');  
     //console.dir(pData[0]); //these are headers
 
-    var personOptions = {
-      'nb_token': NB_TOKEN,
-      'headers': pData[0],
-      'pDetails': pData[1]
-    };
-
-    var aPerson1 = new Person(personOptions);
-    aPerson1.createPerson();
+    //algo_design (not completed)
+    //1. using custom query gvirs file (which contains contacts)
+    //2. find all nationbuilder_ids 
+    //   i)  matched=>update_person 
+    //   ii) not matched=>create_person
+    //3. create a list for them all
+    //4. add a tag to each in list
+    //5. attach contacts to all nationbuilder_ids
+    
+    for (var i = 1; i <=2; i++) {
+      var personOptions = {
+        'nb_token': NB_TOKEN,
+        'headers': pData[0],
+        'pDetails': pData[i]
+      };
+      var aPerson = new Person(personOptions);
+      aPerson.makeNBPerson();
+    }
 
     /*
     var nb_ids = [

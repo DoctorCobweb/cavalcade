@@ -21,7 +21,7 @@ function Person (options) {
   };
 };
 
-Person.prototype.createPerson = function () {
+Person.prototype.makeNBPerson = function () {
   this.gvirsIndexes();
   this.makeNBDetails();
   this.createPersonOnNB();
@@ -113,7 +113,6 @@ Person.prototype.createPersonOnNB = function () {
     var pBody = JSON.parse(body);
     console.log('CREATED (' + pBody.person.id + '): ' + pBody.person.first_name 
       + ' ' + pBody.person.last_name);
-    //addATagToAPerson(pBody.person.id, 'SYNC_GVIRStoNB_person_created_190914', i);
     this.nationbuilder_id = pBody.person.id;
     this.tagPerson();
   }
