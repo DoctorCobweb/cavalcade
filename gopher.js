@@ -72,7 +72,10 @@ Gopher.prototype.createList = function (callback) {
 
   function cb (err, resp, body) {
     if (err) callback(err);
-    if (resp.statusCode != 200) callback(Error('res.statusCode: ' + resp.statusCode));
+    if (resp.statusCode != 200) {
+      var e=Error('ERR: Gopher.prototype.createList: resp.statusCode ' + resp.statusCode);
+      callback(e);
+    }
     callback(null, JSON.parse(body));
     //this.addPeopleToNewList(pBody);  
   };

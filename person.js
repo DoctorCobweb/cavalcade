@@ -37,8 +37,6 @@ Person.prototype.getAddPersonToListUrl = function () {
 
 Person.prototype.getAddContactUrl = function () {
   return (this.NB_BASE_URL + this.NB_PEOPLE + '/' + this.nationbuilder_id + '/contacts');
-  //TESTING: attach all contacts to my profile
-  //return (this.NB_BASE_URL + this.NB_PEOPLE + '/' + this.NB_ANDRE_ID + '/contacts');
 };
 
 Person.prototype.syncToNB = function () {
@@ -192,10 +190,6 @@ Person.prototype.addPersonToList = function () {
   var cb_bound = cb.bind(this);
   request(addToListObj, cb_bound);
 };
-
-
-
-
 
 Person.prototype.attachContactToPerson = function () {
   var cTypes = {

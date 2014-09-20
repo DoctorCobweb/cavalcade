@@ -4,3 +4,4 @@
 .nb_tokens
 .env
 *.swp
+.DS_Store
