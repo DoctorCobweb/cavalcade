@@ -7,25 +7,50 @@ module.exports.Person = Person;
 
 function Person (options) {
   var NB_TOKEN = options.nb_token;
+  this.NB_ANDRE_ID = options.NB_ANDRE_ID;
   this.NB_BASE_URL = 'https://agv.nationbuilder.com/api/v1';
   this.NB_PEOPLE = '/people';
   this.NB_LISTS = '/lists';
   this.headers = options.headers;
-  this.pDetails = options.pDetails;
+  this.gvirsPerson = options.gvirsPerson;
+  this.NBPerson = {};
   this.gIndexes = {};
-  this.pDetailsNB = {};
   this.nationbuilder_id;
+  this.listObj = options.listObj;
+  this.tag = options.tag;
+  this.person_method = options.person_method;
 
   this.accessToken = function () {
     return NB_TOKEN;
   };
-};
 
-Person.prototype.makeNBPerson = function () {
+  //do some initial setup
   this.gvirsIndexes();
   this.makeNBDetails();
-  this.createPersonOnNB();
 };
+
+Person.prototype.getAddPersonToListUrl = function () {
+  var url = this.NB_BASE_URL + this.NB_LISTS + '/' + this.listObj.list_resource.id 
+    + '/people'; 
+  return url;
+};
+
+Person.prototype.getAddContactUrl = function () {
+  return (this.NB_BASE_URL + this.NB_PEOPLE + '/' + this.nationbuilder_id + '/contacts');
+  //TESTING: attach all contacts to my profile
+  //return (this.NB_BASE_URL + this.NB_PEOPLE + '/' + this.NB_ANDRE_ID + '/contacts');
+};
+
+Person.prototype.syncToNB = function () {
+  if (this.person_method === 'POST') {
+    this.createPersonOnNB(); 
+  } 
+
+  if (this.person_method === 'PUT') {
+    this.updatePersonOnNB(); 
+  } 
+};
+
 
 Person.prototype.getPeopleUrl = function () {
   return (this.NB_BASE_URL + this.NB_PEOPLE);
@@ -36,24 +61,36 @@ Person.prototype.gvirsIndexes = function () {
   this.gIndexes.otherNamesIdx = this.headers.indexOf('other_names');
   this.gIndexes.surnameIdx = this.headers.indexOf('surname');
   this.gIndexes.dobIdx = this.headers.indexOf('dob');
-  this.gIndexes.phoneNumsIdx = this.headers.indexOf('phone_numbers');
-  this.gIndexes.genderIdx = this.headers.indexOf('gender');
+  this.gIndexes.genderIdx = this.headers.indexOf('sex');
   this.gIndexes.combStreetAddIdx = this.headers.indexOf('combined_street_address');
   this.gIndexes.flatNumIdx = this.headers.indexOf('flat_no');
-  this.gIndexes.localityIdx = this.headers.indexOf('locality');
+  this.gIndexes.localityIdx = this.headers.indexOf('locality_name');
   this.gIndexes.postcodeIdx = this.headers.indexOf('postcode');
-  this.gIndexes.stateIdx = this.headers.indexOf('state');
-  this.gIndexes.elecStateUpperIdx = this.headers.indexOf('custom_uh_region');
-  this.gIndexes.elecStateLowerIdx = this.headers.indexOf('custom_lh_district');
-  this.gIndexes.elecFedIdx = this.headers.indexOf('custom_fed_elect');
-  this.gIndexes.lgaIdx = this.headers.indexOf('local_gov_area');
-  this.gIndexes.customTargetIdx = this.headers.indexOf('custom_target');
-  this.gIndexes.emailIdx = this.headers.indexOf('email');
+  this.gIndexes.stateIdx = this.headers.indexOf('state_abbreviation');
+
+  this.gIndexes.contactDateIdx = this.headers.indexOf('contact_date');
+  this.gIndexes.contactStatusIdx = this.headers.indexOf('contact_status_name');
+  this.gIndexes.contactMethodIdx = this.headers.indexOf('contact_method_name');
+  this.gIndexes.contactNoteIdx = this.headers.indexOf('notes');
+  this.gIndexes.supportLevelIdx = this.headers.indexOf('support_level');
+
+  //TODO: custom contact csv
+  //need this in contacts csv. 
+  //this.gIndexes.phoneNumsIdx = this.headers.indexOf('phone_numbers');
+  //this.gIndexes.elecStateUpperIdx = this.headers.indexOf('custom_uh_region');
+  //this.gIndexes.elecStateLowerIdx = this.headers.indexOf('custom_lh_district');
+  //this.gIndexes.elecFedIdx = this.headers.indexOf('custom_fed_elect');
+  //this.gIndexes.lgaIdx = this.headers.indexOf('local_gov_area');
+  //this.gIndexes.customTargetIdx = this.headers.indexOf('custom_target');
+  //this.gIndexes.emailIdx = this.headers.indexOf('email');
+
 };
 
 Person.prototype.makeNBDetails = function () {
+  //TODO: custom contact csv
+  /*
   var extractedPhoneNum = '';
-  var phoneField = this.pDetails[this.gIndexes.phoneNumsIdx];
+  var phoneField = this.gvirsPerson[this.gIndexes.phoneNumsIdx];
 
   if (phoneField.indexOf('"') !== -1) {
     //if there's quotation marks then there should be a phonenumber present 
@@ -65,34 +102,38 @@ Person.prototype.makeNBDetails = function () {
     extractedPhoneNum = phoneField.substring(firstQuotationIdx + 1, secondQuotationIdx);
     extractedPhoneNum = extractedPhoneNum.split(' ').join('');
   }
+  */
 
-  var personData = {
-      'first_name': this.pDetails[this.gIndexes.firstNameIdx], 
-      'middle_name': this.pDetails[this.gIndexes.otherNamesIdx], 
-      'last_name': this.pDetails[this.gIndexes.surnameIdx], 
-      'birthdate': this.pDetails[this.gIndexes.dobIdx],
-      'email': this.pDetails[this.gIndexes.emailIdx], 
-      'mobile': extractedPhoneNum, 
-      'sex': this.pDetails[this.gIndexes.genderIdx],
+  this.NBPerson.person = {
+      'first_name': this.gvirsPerson[this.gIndexes.firstNameIdx], 
+      'middle_name': this.gvirsPerson[this.gIndexes.otherNamesIdx], 
+      'last_name': this.gvirsPerson[this.gIndexes.surnameIdx], 
+      'birthdate': this.gvirsPerson[this.gIndexes.dobIdx],
+      'sex': this.gvirsPerson[this.gIndexes.genderIdx],
       'registered_address' : {
-        'address1': this.pDetails[this.gIndexes.combStreetAddIdx],
-        'address2': this.pDetails[this.gIndexes.flatNumIdx],
-        'city': this.pDetails[this.gIndexes.localityIdx],
-        'state': this.pDetails[this.gIndexes.stateIdx].toUpperCase(),
-        'zip': this.pDetails[this.gIndexes.postcodeIdx] 
+        'address1': this.gvirsPerson[this.gIndexes.combStreetAddIdx],
+        'address2': this.gvirsPerson[this.gIndexes.flatNumIdx],
+        'city': this.gvirsPerson[this.gIndexes.localityIdx],
+        'state': this.gvirsPerson[this.gIndexes.stateIdx].toUpperCase(),
+        'zip': this.gvirsPerson[this.gIndexes.postcodeIdx] 
       },
-      'electorate_state_upper': this.pDetails[this.gIndexes.elecStateUpperIdx],
-      'electorate_state_lower': this.pDetails[this.gIndexes.elecStateLowerIdx],
-      'electorate_federal': this.pDetails[this.gIndexes.elecFedIdx], 
-      'lga': this.pDetails[this.gIndexes.lgaIdx],
-      'custom_target': this.pDetails[this.gIndexes.customTargetIdx]
-    };
 
-  this.pDetailsNB.person = personData;
+      //TODO: custom contact csv
+      //'email': this.gvirsPerson[this.gIndexes.emailIdx], 
+      //'mobile': extractedPhoneNum, 
+      //'custom_target': this.gvirsPerson[this.gIndexes.customTargetIdx],
+      //'electorate_state_upper': this.gvirsPerson[this.gIndexes.elecStateUpperIdx],
+      //'electorate_state_lower': this.gvirsPerson[this.gIndexes.elecStateLowerIdx],
+      //'electorate_federal': this.gvirsPerson[this.gIndexes.elecFedIdx], 
+      //'lga': this.gvirsPerson[this.gIndexes.lgaIdx],
+      'tags': [this.tag],
+      'support_level' : this.gvirsPerson[this.gIndexes.supportLevelIdx]
+    };
 };
 
 
 Person.prototype.createPersonOnNB = function () {
+  console.log('createPersonOnNB');
   var peopleObj = {
     url: this.getPeopleUrl(),
     qs: {
@@ -103,32 +144,60 @@ Person.prototype.createPersonOnNB = function () {
       'content-type': 'application/json',
       'accept' :'application/json'
     },
-    body : JSON.stringify(this.pDetailsNB)
+    body : JSON.stringify(this.NBPerson)
   };
 
   function cb (err, resp, body) {
     if (err) throw err;
-    console.log('resp.statusCode: ' + resp.statusCode);
-    //body is a JSON string, we want an object.
+    if (resp.statusCode !== 201) throw Error('create person resp: ' + resp.statusCode);
     var pBody = JSON.parse(body);
     console.log('CREATED (' + pBody.person.id + '): ' + pBody.person.first_name 
       + ' ' + pBody.person.last_name);
+    
+    //IMPORTANT: now we have successfully create a new NB person we MUST set their
+    //nationbuilder_id for this person instance
     this.nationbuilder_id = pBody.person.id;
-    this.tagPerson();
+    this.addPersonToList();
   }
   var cb_bound = cb.bind(this);
   request(peopleObj, cb_bound);
 }
 
-Person.prototype.tagPerson = function () {
-  //TODO
-  console.log('TODO: tagPerson()');
+Person.prototype.addPersonToList = function () {
+  var body = {
+    'people_ids': [this.nationbuilder_id] 
+  };
+  var addToListObj = {
+    url: this.getAddPersonToListUrl(), 
+    qs: {
+      'access_token': this.accessToken()
+    },
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'accept' :'application/json'
+    },
+    body: JSON.stringify(body)
+  };
+
+  function cb (err, resp, body) {
+    if (err) throw err;
+    if (resp.statusCode !== 200) throw Error('add person list resp: ' + resp.statusCode);
+    var pBody = JSON.parse(body);
+    console.log('ADDED PERSON ' + this.nationbuilder_id + ' TO LIST:');
+    console.dir(pBody);
+    console.log('.....\n');
+    this.attachContactToPerson();
+  }
+  var cb_bound = cb.bind(this);
+  request(addToListObj, cb_bound);
 };
 
-/*
-Person.prototype.attachContactsToPerson = function () {
-  var contactsUrl = NB_BASE_URL + NB_PEOPLE + '/' + person_id + '/contacts';
 
+
+
+
+Person.prototype.attachContactToPerson = function () {
   var cTypes = {
     'Volunteer recruitment': 6,
     'Supporter Event Invitation': 21,
@@ -174,23 +243,29 @@ Person.prototype.attachContactsToPerson = function () {
     'No answer': 'no_answer',
     'Refused': 'refused',
     'Send information': 'send_information',
-    'other': 'other'
+    'other': 'other',
+    'Busy': 'other' //NB does not have Busy but gvirs does => default it to 'other'
   };
+
+  var cStatusVal = this.gvirsPerson[this.gIndexes.contactStatusIdx];
+  var cMethodVal = this.gvirsPerson[this.gIndexes.contactMethodIdx];
+  var cNoteVal   = this.gvirsPerson[this.gIndexes.contactNoteIdx];
 
   var contactData = {
     'contact': {
-      'sender_id': 1149870,
-      'status': cStatuses['Answered'],
-      'method': cMethods['Door knock'],
+      //TODO: change to actual person's id, not mine for all contacts
+      'sender_id': this.NB_ANDRE_ID,
+      'status': cStatuses[cStatusVal],
+      'method': cMethods[cMethodVal],
       'type_id': cTypes['Voter outreach election'],
-      'note': 'SYNC_1: this is a TEST for SYNC_gVIRS->NB door knock contact' 
+      'note': cNoteVal 
     }
   };
 
   var contactsObj = {
-    url: contactsUrl,
+    url: this.getAddContactUrl(),
     qs: {
-      'access_token': NB_TOKEN
+      'access_token': this.accessToken()
     },
     method: 'POST',
     headers: {
@@ -200,115 +275,27 @@ Person.prototype.attachContactsToPerson = function () {
     body : JSON.stringify(contactData)
   };
 
-  console.log('attaching a contact to person_id: ' + person_id);
+  console.log('attaching a contact to person_id: ' + this.nationbuilder_id);
 
   request(contactsObj, function (err, resp, body) {
     if (err) throw err;
+    var pBody = JSON.parse(body);
     console.log('resp.statusCode: ' + resp.statusCode);
-    //body is a JSON string, we want an object.
-    var pBody = JSON.parse(body);
-    console.log('CONTACT CREATED(' + person_id + '):');
+    console.log('CONTACT CREATED:');
     console.log(pBody);
   });
 }
-*/
 
+//TODO
+Person.prototype.updatePersonOnNB = function () {
+  console.log('updatePersonOnNB');
+};
+
+
+
+
+//JUNK FOR NOW
 /*
-fs.readFile(GVIRS_NB_MATCHES_FILE, {encoding:'utf-8'}, function (err, data) {
-  if (err) throw err;
-  csv.parse(data, function (error, pData) {
-    if (error) throw error;
-    var nb_id = pData[0].indexOf('nationbuilder_id');
-    console.log('successfully parsed gvirs nb matches file');  
-    //console.dir(pData[0]);
-    
-    var nb_ids = _.reduce(pData, function (result, row) {
-      result.push(row[0])
-      return result;
-    }, []);
-
-    nb_ids = nb_ids.slice(1);
-    //console.log(nb_ids);
-    
-    var listOptions = {
-      'list_name': 'wv_der_test_1',
-      'nb_ids': nb_ids,
-      'tag' : 'wv_dre_yadda',
-      'author_id' : 1149870
-    };
-    createList(listOptions);
-    //addTagToAllPeopleInList(5785, 'wv_dre_yadda_test');
-    //deleteTagToAllPeopleInList(5785, 'wv_dre_yadda_test');
-  });
-});
-
-
-function createList(options) {
-  var new_list_url = NB_BASE_URL + NB_LISTS;
-  var newListBody = {
-    'list': {
-      'name': options.list_name,
-      'slug': options.list_name,
-      'author_id': options.author_id,
-      'sort_order': 'oldest_first'
-    }
-  };
-  var reqObjNewList = {
-    url: new_list_url,
-    qs: {
-      'access_token': NB_TOKEN
-    },
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'accept' :'application/json'
-    },
-    body : JSON.stringify(newListBody)
-  };
-
-  request(reqObjNewList, function (err, resp, body) {
-    if (err) throw err;
-    console.log(resp.statusCode);
-    //body is a JSON string, we want an object.
-    var pBody = JSON.parse(body);
-    console.log('CREATED new list:');
-    console.log(pBody);
-
-    addPeopleToNewList(pBody, options);  
-  });
-}
-
-function addPeopleToNewList(pBody, options) {
-  //using id of newly created list now add ppl to it using their nationbuilder_id
-  var addToListUrl = NB_BASE_URL + NB_LISTS + '/' + pBody.list_resource.id + '/people';
-  var addPeopleBody = {
-    'people_ids': options.nb_ids 
-  };
-  var reqObjAddToList = {
-    url: addToListUrl,
-    qs: {
-      'access_token': NB_TOKEN
-    },
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'accept' :'application/json'
-    },
-    body : JSON.stringify(addPeopleBody)
-  };
-
-  request(reqObjAddToList, function (err, resp, body) {
-    if (err) throw err;
-    console.log(resp.statusCode);
-    //body is a JSON string, we want an object.
-    var lBody = JSON.parse(body);
-    console.log('ADDED people to list:');
-    console.log(lBody);
-
-    //addTagToAllPeopleInList(lBody.list_resource.id, options);
-  });
-}
-
 function addTagToAllPeopleInList(list_id, options) {
   //nb recently made it easy to bulk add tag and bulk delete tags for many ppl.
   //it is base on lists so the api endpoints are:

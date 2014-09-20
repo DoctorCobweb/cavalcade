@@ -48,7 +48,7 @@ Gopher.prototype.attachContacts = function () {
   console.log('TODO: Gopher attachContacts');
 };
 
-Gopher.prototype.createList = function () {
+Gopher.prototype.createList = function (callback) {
   var newListBody = {
     'list': {
       'name': this.options.list.list_name,
@@ -71,13 +71,10 @@ Gopher.prototype.createList = function () {
   };
 
   function cb (err, resp, body) {
-    if (err) throw err;
-    console.log(resp.statusCode);
-    //body is a JSON string, we want an object.
-    var pBody = JSON.parse(body);
-    console.log('CREATED new list:');
-    console.log(pBody);
-    this.addPeopleToNewList(pBody);  
+    if (err) callback(err);
+    if (resp.statusCode != 200) callback(Error('res.statusCode: ' + resp.statusCode));
+    callback(null, JSON.parse(body));
+    //this.addPeopleToNewList(pBody);  
   };
   var cb_bound = cb.bind(this);
   request(reqObjNewList, cb_bound);
