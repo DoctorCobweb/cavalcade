@@ -18,7 +18,7 @@ function Person (options) {
   this.nationbuilder_id;
   this.listObj = options.listObj;
   this.tag = options.tag;
-  this.person_method = options.person_method;
+  this.person_method;
 
   this.accessToken = function () {
     return NB_TOKEN;
@@ -27,6 +27,10 @@ function Person (options) {
   //do some initial setup
   this.gvirsIndexes();
   this.makeNBDetails();
+};
+
+Person.prototype.getPeopleUrl = function () {
+  return (this.NB_BASE_URL + this.NB_PEOPLE);
 };
 
 Person.prototype.getAddPersonToListUrl = function () {
@@ -40,18 +44,23 @@ Person.prototype.getAddContactUrl = function () {
 };
 
 Person.prototype.syncToNB = function () {
-  if (this.person_method === 'POST') {
-    this.createPersonOnNB(); 
-  } 
+  this.gIndexes.hasNBMatchIdx = this.headers.indexOf('has_nb_match');
+  this.gIndexes.nationbuilderIdx = this.headers.indexOf('nationbuilder_id');
 
-  if (this.person_method === 'PUT') {
+  if (this.gvirsPerson[this.gIndexes.hasNBMatchIdx] === 'NO') {
+    this.person_method = 'POST'; 
+    this.createPersonOnNB(); 
+  }
+  if (this.gvirsPerson[this.gIndexes.hasNBMatchIdx] === 'YES') {
+    this.person_method = 'PUT';
+    this.nationbuilder_id = this.gvirsPerson[this.gIndexes.hasNBMatchIdx];
     this.updatePersonOnNB(); 
-  } 
+  }
 };
 
-
-Person.prototype.getPeopleUrl = function () {
-  return (this.NB_BASE_URL + this.NB_PEOPLE);
+//TODO
+Person.prototype.updatePersonOnNB = function () {
+  console.log('TODO: updatePersonOnNB');
 };
 
 Person.prototype.gvirsIndexes = function () {
@@ -65,13 +74,11 @@ Person.prototype.gvirsIndexes = function () {
   this.gIndexes.localityIdx = this.headers.indexOf('locality_name');
   this.gIndexes.postcodeIdx = this.headers.indexOf('postcode');
   this.gIndexes.stateIdx = this.headers.indexOf('state_abbreviation');
-
   this.gIndexes.contactDateIdx = this.headers.indexOf('contact_date');
   this.gIndexes.contactStatusIdx = this.headers.indexOf('contact_status_name');
   this.gIndexes.contactMethodIdx = this.headers.indexOf('contact_method_name');
   this.gIndexes.contactNoteIdx = this.headers.indexOf('notes');
   this.gIndexes.supportLevelIdx = this.headers.indexOf('support_level');
-
   //TODO: custom contact csv
   //need this in contacts csv. 
   //this.gIndexes.phoneNumsIdx = this.headers.indexOf('phone_numbers');
@@ -81,10 +88,11 @@ Person.prototype.gvirsIndexes = function () {
   //this.gIndexes.lgaIdx = this.headers.indexOf('local_gov_area');
   //this.gIndexes.customTargetIdx = this.headers.indexOf('custom_target');
   //this.gIndexes.emailIdx = this.headers.indexOf('email');
-
 };
 
 Person.prototype.makeNBDetails = function () {
+  var supportLevel;
+
   //TODO: custom contact csv
   /*
   var extractedPhoneNum = '';
@@ -102,6 +110,12 @@ Person.prototype.makeNBDetails = function () {
   }
   */
 
+  //gvirs and NB support level mismatch.
+  //gvirs(0) => NB(null)
+  if (this.gvirsPerson[this.gIndexes.supportLevelIdx] !== 0) {
+    supportLevel = this.gvirsPerson[this.gIndexes.supportLevelIdx];
+  }
+
   this.NBPerson.person = {
       'first_name': this.gvirsPerson[this.gIndexes.firstNameIdx], 
       'middle_name': this.gvirsPerson[this.gIndexes.otherNamesIdx], 
@@ -115,7 +129,6 @@ Person.prototype.makeNBDetails = function () {
         'state': this.gvirsPerson[this.gIndexes.stateIdx].toUpperCase(),
         'zip': this.gvirsPerson[this.gIndexes.postcodeIdx] 
       },
-
       //TODO: custom contact csv
       //'email': this.gvirsPerson[this.gIndexes.emailIdx], 
       //'mobile': extractedPhoneNum, 
@@ -125,7 +138,7 @@ Person.prototype.makeNBDetails = function () {
       //'electorate_federal': this.gvirsPerson[this.gIndexes.elecFedIdx], 
       //'lga': this.gvirsPerson[this.gIndexes.lgaIdx],
       'tags': [this.tag],
-      'support_level' : this.gvirsPerson[this.gIndexes.supportLevelIdx]
+      'support_level' : supportLevel 
     };
 };
 
@@ -226,7 +239,8 @@ Person.prototype.attachContactToPerson = function () {
     'other': 'other'
   };
 
-
+  //NB status API.
+  /*
   var cStatuses = {
     'Answered': 'answered',
     'Bad info': 'bad_info',
@@ -240,6 +254,16 @@ Person.prototype.attachContactToPerson = function () {
     'other': 'other',
     'Busy': 'other' //NB does not have Busy but gvirs does => default it to 'other'
   };
+  */
+
+  //NOTE: nomenclature in gvirs is different to NB. therefore, this will look unmatched
+  //gvirs(answered)-> nb(meaningful_interaction)
+  //gvirs(busy)-> nb(answered)
+  //ask lloyd davies for further info if need be
+  var cStatuses = {
+    'Answered': 'meaningful_interaction',
+    'Busy': 'answered' //NB does not have Busy but gvirs does => default it to 'other'
+  };
 
   var cStatusVal = this.gvirsPerson[this.gIndexes.contactStatusIdx];
   var cMethodVal = this.gvirsPerson[this.gIndexes.contactMethodIdx];
@@ -247,7 +271,7 @@ Person.prototype.attachContactToPerson = function () {
 
   var contactData = {
     'contact': {
-      //TODO: change to actual person's id, not mine for all contacts
+      //TODO: change to data person's id, not mine for all contacts
       'sender_id': this.NB_ANDRE_ID,
       'status': cStatuses[cStatusVal],
       'method': cMethods[cMethodVal],
@@ -280,10 +304,15 @@ Person.prototype.attachContactToPerson = function () {
   });
 }
 
-//TODO
-Person.prototype.updatePersonOnNB = function () {
-  console.log('updatePersonOnNB');
-};
+
+
+
+
+
+
+
+
+
 
 
 
