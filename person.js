@@ -19,6 +19,7 @@ function Person (options) {
   this.listObj = options.listObj;
   this.tag = options.tag;
   this.person_method;
+  this.syncDate = options.syncDate;
 
   this.accessToken = function () {
     return NB_TOKEN;
@@ -43,9 +44,20 @@ Person.prototype.getAddContactUrl = function () {
   return (this.NB_BASE_URL + this.NB_PEOPLE + '/' + this.nationbuilder_id + '/contacts');
 };
 
+Person.prototype.getTaggingsUrl = function () {
+  return (this.NB_BASE_URL + this.NB_PEOPLE + '/' + this.nationbuilder_Id + '/taggings');
+};
+
 Person.prototype.syncToNB = function () {
   this.gIndexes.hasNBMatchIdx = this.headers.indexOf('has_nb_match');
   this.gIndexes.nationbuilderIdIdx = this.headers.indexOf('nationbuilder_id');
+
+  //there's no use logging an empty contact so skip everything if so.
+  if (this.isContactEmpty()) {
+    var contact_id = this.gvirsPerson[this.gIndexes.gvirsContactIdIdx];
+    console.log('EMPTY CONTACT. ABORT EVERYTHING for GVIRS contact_id:' + contact_id);
+    return;
+  }
 
   if (this.gvirsPerson[this.gIndexes.hasNBMatchIdx] === 'NO') {
     this.person_method = 'POST'; 
@@ -53,21 +65,77 @@ Person.prototype.syncToNB = function () {
   }
   if (this.gvirsPerson[this.gIndexes.hasNBMatchIdx] === 'YES') {
     var nbIdInteger = parseInt(this.gvirsPerson[this.gIndexes.nationbuilderIdIdx], 10);
-    this.nationbuilder_id = nbIdInteger;
     this.person_method = 'PUT';
+    this.nationbuilder_id = nbIdInteger;
     this.updatePersonOnNB(); 
   }
 };
 
-//TODO
 Person.prototype.updatePersonOnNB = function () {
-  console.log('TODO: updatePersonOnNB');
+  //atm don't update person details record on NB
+  //only add them to list and attach the contact to their profile
+  function cb (err, tagResp) {
+    if (err) throw err;
+    console.log('person already on NB. tagging..');
+    console.log('TAGGED ' + this.nationbuilder_id);
+    this.addPersonToList();
+  }
 
-  //atm don't update person record on NB
-  //only add them to list and attach contacts
-  this.addPersonToList();
+  if (this.isANbContactAlreadyAttached()) {
+    console.log(this.nationbuilder_id + ' ALREADY IN NB & HAS THIS CONTACT LOGGED.Skip.');
+    return; 
+  } else {
+    var bound_cb = cb.bind(this);
+    this.tagPerson(bound_cb);
+  }
 };
 
+Person.prototype.isContactEmpty = function () {
+  var cNoteVal   = this.gvirsPerson[this.gIndexes.contactNoteIdx];
+  if (!cNoteVal) {
+    return true;
+  } else {
+    return false; 
+  }
+};
+
+Person.prototype.isANbContactAlreadyAttached = function () {
+  //now if we have a nationbuilder contact for a matched person in NB
+  //=> we get a circular import.
+  //the person in NB already exists AND has that contact logged
+  //we should find this string at the START of cNoteVal
+  var cNoteVal   = this.gvirsPerson[this.gIndexes.contactNoteIdx];
+  var aNBContact = cNoteVal.indexOf('Imported from nationbuilder instance \'agv\'');
+  if (this.person_method === 'PUT' && aNBContact === 0) {
+    return true;
+  } else {
+    return false; 
+  }
+};
+
+Person.prototype.tagPerson = function (callback) {
+  var tagObj = {
+    url: this.getTaggingsUrl(),
+    qs: {
+      'access_token': this.accessToken()
+    },
+    method: 'PUT',
+    headers: {
+      'content-type': 'application/json',
+      'accept' :'application/json'
+    },
+    body : JSON.stringify({
+      'tagging': {'tag': this.tag}
+    })
+  };
+  function cb (err, resp, body) {
+    if (err) throw err;
+      callback(null, JSON.parse(body))
+  }
+  var cb_bound = cb.bind(this);
+  request(tagObj, cb_bound);
+};
+  
 Person.prototype.gvirsIndexes = function () {
   this.gIndexes.firstNameIdx = this.headers.indexOf('first_name');
   this.gIndexes.otherNamesIdx = this.headers.indexOf('other_names');
@@ -85,6 +153,7 @@ Person.prototype.gvirsIndexes = function () {
   this.gIndexes.contactNoteIdx = this.headers.indexOf('notes');
   this.gIndexes.supportLevelIdx = this.headers.indexOf('support_level');
   this.gIndexes.contactDateIdx = this.headers.indexOf('contact_date');
+  this.gIndexes.gvirsContactIdIdx = this.headers.indexOf('contact_id');
   //TODO: custom contact csv
   //need this in contacts csv. 
   //this.gIndexes.phoneNumsIdx = this.headers.indexOf('phone_numbers');
@@ -150,7 +219,8 @@ Person.prototype.makeNBDetails = function () {
 
 
 Person.prototype.createPersonOnNB = function () {
-  console.log('createPersonOnNB');
+  var contact_id = this.gvirsPerson[this.gIndexes.gvirsContactIdIdx];
+  console.log('createPersonOnNB for contact_id: ' + contact_id);
   var peopleObj = {
     url: this.getPeopleUrl(),
     qs: {
@@ -169,7 +239,7 @@ Person.prototype.createPersonOnNB = function () {
     if (resp.statusCode !== 201) throw Error('create person resp: ' + resp.statusCode);
     var pBody = JSON.parse(body);
     console.log('CREATED (' + pBody.person.id + '): ' + pBody.person.first_name 
-      + ' ' + pBody.person.last_name);
+      + ' ' + pBody.person.last_name + ' for gvirs contact_id: ' + contact_id);
     
     //IMPORTANT: now we have successfully create a new NB person we MUST set their
     //nationbuilder_id for this person instance
@@ -201,9 +271,8 @@ Person.prototype.addPersonToList = function () {
     if (err) throw err;
     if (resp.statusCode !== 200) throw Error('add person list resp: ' + resp.statusCode);
     var pBody = JSON.parse(body);
-    console.log('ADDED PERSON ' + this.nationbuilder_id + ' TO LIST:');
-    console.dir(pBody);
-    console.log('.....\n');
+    console.log('ADDED PERSON ' + this.nationbuilder_id + ' TO LIST: ' 
+      + pBody.list_resource.id);
     this.attachContactToPerson();
   }
   var cb_bound = cb.bind(this);
@@ -274,25 +343,26 @@ Person.prototype.attachContactToPerson = function () {
   var cStatusVal = this.gvirsPerson[this.gIndexes.contactStatusIdx];
   var cMethodVal = this.gvirsPerson[this.gIndexes.contactMethodIdx];
   var cNoteVal   = this.gvirsPerson[this.gIndexes.contactNoteIdx];
+  var cDate      = new Date(this.gvirsPerson[this.gIndexes.contactDateIdx]);
 
-  var cDate = new Date(this.gvirsPerson[this.gIndexes.contactDateIdx]);
-  console.log(cDate);
-
-  cNoteVal = cNoteVal + ' CONTACT DATE:' + this.gvirsPerson[this.gIndexes.contactDateIdx];
-
-  if (cMethodVal === 'answered') {
-    cNoteVal = 'gVIRS *BUSY* contact status. This is the note: ' 
-      + cNoteVal + ' CONTACT DATE: ' + this.gvirsPerson[this.gIndexes.contactDateIdx];
+  if (cStatusVal === 'Busy') {
+    cNoteVal = 'Busy. ' + cNoteVal;
   }
+  cNoteVal = '[ gVIRS_to_NB_sync_' + this.syncDate + ' ] => ' 
+	     + ' [ CONTACT DATE ] = ' 
+	     + this.gvirsPerson[this.gIndexes.contactDateIdx]
+	     + ' [ CONTACT ID ] = '
+             + this.gvirsPerson[this.gIndexes.gvirsContactIdIdx]
+	     + ' [ NOTE ] = ' + cNoteVal;
 
   var contactData = {
     'contact': {
-      //TODO: change to data person's id, not mine for all contacts
+      //TODO: change to data_entry person's id, not mine for all contacts
       'sender_id': this.NB_ANDRE_ID,
       'status': cStatuses[cStatusVal],
       'method': cMethods[cMethodVal],
       'type_id': cTypes['Voter outreach election'],
-      'note': 'TEST: ' + cNoteVal 
+      'note': cNoteVal 
     }
   };
 
@@ -314,8 +384,7 @@ Person.prototype.attachContactToPerson = function () {
   request(contactsObj, function (err, resp, body) {
     if (err) throw err;
     var pBody = JSON.parse(body);
-    console.log('resp.statusCode: ' + resp.statusCode);
-    console.log('CONTACT CREATED:');
+    console.log('resp.statusCode: ' + resp.statusCode + 'CONTACT CREATED:');
     console.log(pBody);
   });
 }

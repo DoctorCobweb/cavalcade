@@ -44,7 +44,7 @@ function init() {
     'nb_ids': [NB_ANDRE_ID],
     'tag': 'SYNC_GVIRStoNB_personCreated_220914',
     'list' : {
-      'list_name' : 'wv_der_test_1',
+      'list_name' : 'wv_der_test_' + Math.floor(Math.random() * 1000),
       'author_id': NB_ANDRE_ID
     }
   };
@@ -56,7 +56,7 @@ function init() {
 
     startSync({
       'listObj': listObj,
-      'tag': 'SYNC_GVIRStoNB_personCreated_220914'
+      'tag': 'gVIRS_to_NB_sync_22_SEPT_2014'
     });
   });
 }
@@ -71,8 +71,9 @@ function startSync(options) {
       //console.dir(pData[0]); //these are headers
 
       var actualTokenIndex = 0;
-      for (var i = 1; i <= 3; i++) {
-        if (i % 200 === 0) {
+      for (var i = 1; i < pData.length; i++) {
+        if (i % 100 === 0) {
+	  console.log('*** switching tokens ***');
 	  actualTokenIndex++;
 	  if (actualTokenIndex === NB_TOKENS.length) {
 	    throw Error('ran out of tokens. you need to add more to .nb_tokens file'); 
@@ -82,7 +83,8 @@ function startSync(options) {
         options['nb_token']      = NB_TOKENS[actualTokenIndex];
         options['headers']       = pData[0];
         options['gvirsPerson']   = pData[i];
-	options['NB_ANDRE_ID']   = NB_ANDRE_ID
+	options['NB_ANDRE_ID']   = NB_ANDRE_ID;
+	options['syncDate']      = '22_SEPT_2014':
   
         var aPerson = new Person(options);
         aPerson.syncToNB();
