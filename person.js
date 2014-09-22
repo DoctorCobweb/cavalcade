@@ -351,12 +351,12 @@ Person.prototype.attachContactToPerson = function () {
   if (cStatusVal === 'Busy') {
     cNoteVal = 'Busy. ' + cNoteVal;
   }
-  cNoteVal = '[gVIRS->NB_SYNC_' + this.syncDate + '] => ' 
-	     + ' [CONTACT_DATE] = ' 
+  cNoteVal = '[.::SYNC::.::gVIRS->NB::.::' + this.syncDate + '::.] =====> ' 
+	     + ' [.::gVIRS_CONTACT_DATE::.] = ' 
 	     + this.gvirsPerson[this.gIndexes.contactDateIdx]
-	     + ' [CONTACT_ID] = '
+	     + ' [.::gVIRS_CONTACT_ID::.] = '
              + this.gvirsPerson[this.gIndexes.gvirsContactIdIdx]
-	     + ' [NOTE] = ' + cNoteVal;
+	     + ' [.::gVIRS_NOTE::.] = ' + cNoteVal;
 
   var contactData = {
     'contact': {

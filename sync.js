@@ -17,7 +17,9 @@ var Gopher = require('./gopher').Gopher;
 var NB_TOKENS = [];
 var NB_ANDRE_ID = 1149870;
 var NB_ACCESS_TOKEN_FILE  = process.cwd() + '/.nb_tokens';
-var GVIRS_PANDAS_ANALYSED_FILE   = process.cwd() + '/gvirs_to_nb_PANDAS_OUT_210914.csv';
+//var GVIRS_PANDAS_ANALYSED_FILE   = process.cwd() + '/gvirs_to_nb_PANDAS_OUT_210914.csv';
+var GVIRS_PANDAS_ANALYSED_FILE   = process.cwd() 
+  + '/gvirs_to_nb_PANDAS_OUT_210914_only_NOs.csv';
 
 fs.readFile(NB_ACCESS_TOKEN_FILE, {encoding:'utf-8'}, function (err, data) {
   if (err) throw err;
@@ -57,7 +59,7 @@ function init() {
     startSync({
       'listObj': listObj,
 
-      'tag': 'gVIRS_to_NB_sync_22_SEPT_2014'
+      'tag': 'SYNC_GVIRStoNB_22_SEPT_2014'
     });
   });
 }
@@ -80,7 +82,7 @@ function startSync(options) {
         if (index === totalNumberOfPpl) {
           return;	
 	} else {
-          setTimeout(littleCall, 10000);	
+          setTimeout(littleCall, 1000);	
 	} 
       
 	function littleCall() {
