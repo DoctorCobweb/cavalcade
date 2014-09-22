@@ -56,6 +56,7 @@ function init() {
 
     startSync({
       'listObj': listObj,
+
       'tag': 'gVIRS_to_NB_sync_22_SEPT_2014'
     });
   });
@@ -71,24 +72,62 @@ function startSync(options) {
       //console.dir(pData[0]); //these are headers
 
       var actualTokenIndex = 0;
+      var totalNumberOfPpl = pData.length - 1;
+
+      indivCall(1);
+  
+      function indivCall(index) {
+        if (index === totalNumberOfPpl) {
+          return;	
+	} else {
+          setTimeout(littleCall, 10000);	
+	} 
+      
+	function littleCall() {
+          if (index % 90 === 0) {
+  	    console.log('*** switching tokens ***');
+  	    actualTokenIndex++;
+  	    if (actualTokenIndex === NB_TOKENS.length) {
+  	      throw error('ran out of tokens. you need to add more to .nb_tokens file'); 
+  	    }
+  	  }
+          options['nb_token']      = NB_TOKENS[actualTokenIndex];
+          options['headers']       = pData[0];
+          options['gvirsPerson']   = pData[index];
+  	  options['NB_ANDRE_ID']   = NB_ANDRE_ID;
+  	  options['syncDate']      = '22_SEPT_2014';
+    
+          var aPerson = new Person(options);
+          aPerson.syncToNB();
+
+	  return indivCall(index + 1); 
+	}
+      }
+
+
+      /*
+      var actualTokenIndex = 0;
       for (var i = 1; i < pData.length; i++) {
-        if (i % 100 === 0) {
+        if (i % 90 === 0) {
 	  console.log('*** switching tokens ***');
 	  actualTokenIndex++;
 	  if (actualTokenIndex === NB_TOKENS.length) {
-	    throw Error('ran out of tokens. you need to add more to .nb_tokens file'); 
+	    throw error('ran out of tokens. you need to add more to .nb_tokens file'); 
 	  }
 	}
 
-        options['nb_token']      = NB_TOKENS[actualTokenIndex];
+        options['NB_TOKEN']      = NB_TOKENS[actualTokenIndex];
         options['headers']       = pData[0];
         options['gvirsPerson']   = pData[i];
 	options['NB_ANDRE_ID']   = NB_ANDRE_ID;
-	options['syncDate']      = '22_SEPT_2014':
+	options['syncDate']      = '22_SEPT_2014';
   
         var aPerson = new Person(options);
         aPerson.syncToNB();
       }
+      */
+
+
     });
   });
 }

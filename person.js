@@ -74,19 +74,21 @@ Person.prototype.syncToNB = function () {
 Person.prototype.updatePersonOnNB = function () {
   //atm don't update person details record on NB
   //only add them to list and attach the contact to their profile
-  function cb (err, tagResp) {
-    if (err) throw err;
-    console.log('person already on NB. tagging..');
-    console.log('TAGGED ' + this.nationbuilder_id);
-    this.addPersonToList();
-  }
 
   if (this.isANbContactAlreadyAttached()) {
-    console.log(this.nationbuilder_id + ' ALREADY IN NB & HAS THIS CONTACT LOGGED.Skip.');
+    console.log('this.nationbuilder_Id: ' + this.nationbuilder_id 
+		+ ' ALREADY IN NB & HAS THIS CONTACT LOGGED.Skip.');
     return; 
   } else {
     var bound_cb = cb.bind(this);
     this.tagPerson(bound_cb);
+  }
+
+  function cb (err, tagResp) {
+    if (err) throw err;
+    console.log('person already on NB. tagging..');
+    console.log('TAGGED. this.nationbuilder_id: ' + this.nationbuilder_id);
+    this.addPersonToList();
   }
 };
 
@@ -221,6 +223,7 @@ Person.prototype.makeNBDetails = function () {
 Person.prototype.createPersonOnNB = function () {
   var contact_id = this.gvirsPerson[this.gIndexes.gvirsContactIdIdx];
   console.log('createPersonOnNB for contact_id: ' + contact_id);
+
   var peopleObj = {
     url: this.getPeopleUrl(),
     qs: {
@@ -348,12 +351,12 @@ Person.prototype.attachContactToPerson = function () {
   if (cStatusVal === 'Busy') {
     cNoteVal = 'Busy. ' + cNoteVal;
   }
-  cNoteVal = '[ gVIRS_to_NB_sync_' + this.syncDate + ' ] => ' 
-	     + ' [ CONTACT DATE ] = ' 
+  cNoteVal = '[gVIRS->NB_SYNC_' + this.syncDate + '] => ' 
+	     + ' [CONTACT_DATE] = ' 
 	     + this.gvirsPerson[this.gIndexes.contactDateIdx]
-	     + ' [ CONTACT ID ] = '
+	     + ' [CONTACT_ID] = '
              + this.gvirsPerson[this.gIndexes.gvirsContactIdIdx]
-	     + ' [ NOTE ] = ' + cNoteVal;
+	     + ' [NOTE] = ' + cNoteVal;
 
   var contactData = {
     'contact': {
@@ -384,7 +387,7 @@ Person.prototype.attachContactToPerson = function () {
   request(contactsObj, function (err, resp, body) {
     if (err) throw err;
     var pBody = JSON.parse(body);
-    console.log('resp.statusCode: ' + resp.statusCode + 'CONTACT CREATED:');
+    console.log('resp.statusCode: ' + resp.statusCode + '. CONTACT CREATED:');
     console.log(pBody);
   });
 }
