@@ -45,15 +45,16 @@ Person.prototype.getAddContactUrl = function () {
 
 Person.prototype.syncToNB = function () {
   this.gIndexes.hasNBMatchIdx = this.headers.indexOf('has_nb_match');
-  this.gIndexes.nationbuilderIdx = this.headers.indexOf('nationbuilder_id');
+  this.gIndexes.nationbuilderIdIdx = this.headers.indexOf('nationbuilder_id');
 
   if (this.gvirsPerson[this.gIndexes.hasNBMatchIdx] === 'NO') {
     this.person_method = 'POST'; 
     this.createPersonOnNB(); 
   }
   if (this.gvirsPerson[this.gIndexes.hasNBMatchIdx] === 'YES') {
+    var nbIdInteger = parseInt(this.gvirsPerson[this.gIndexes.nationbuilderIdIdx], 10);
+    this.nationbuilder_id = nbIdInteger;
     this.person_method = 'PUT';
-    this.nationbuilder_id = this.gvirsPerson[this.gIndexes.hasNBMatchIdx];
     this.updatePersonOnNB(); 
   }
 };
@@ -61,6 +62,10 @@ Person.prototype.syncToNB = function () {
 //TODO
 Person.prototype.updatePersonOnNB = function () {
   console.log('TODO: updatePersonOnNB');
+
+  //atm don't update person record on NB
+  //only add them to list and attach contacts
+  this.addPersonToList();
 };
 
 Person.prototype.gvirsIndexes = function () {
@@ -79,6 +84,7 @@ Person.prototype.gvirsIndexes = function () {
   this.gIndexes.contactMethodIdx = this.headers.indexOf('contact_method_name');
   this.gIndexes.contactNoteIdx = this.headers.indexOf('notes');
   this.gIndexes.supportLevelIdx = this.headers.indexOf('support_level');
+  this.gIndexes.contactDateIdx = this.headers.indexOf('contact_date');
   //TODO: custom contact csv
   //need this in contacts csv. 
   //this.gIndexes.phoneNumsIdx = this.headers.indexOf('phone_numbers');
@@ -269,6 +275,16 @@ Person.prototype.attachContactToPerson = function () {
   var cMethodVal = this.gvirsPerson[this.gIndexes.contactMethodIdx];
   var cNoteVal   = this.gvirsPerson[this.gIndexes.contactNoteIdx];
 
+  var cDate = new Date(this.gvirsPerson[this.gIndexes.contactDateIdx]);
+  console.log(cDate);
+
+  cNoteVal = cNoteVal + ' CONTACT DATE:' + this.gvirsPerson[this.gIndexes.contactDateIdx];
+
+  if (cMethodVal === 'answered') {
+    cNoteVal = 'gVIRS *BUSY* contact status. This is the note: ' 
+      + cNoteVal + ' CONTACT DATE: ' + this.gvirsPerson[this.gIndexes.contactDateIdx];
+  }
+
   var contactData = {
     'contact': {
       //TODO: change to data person's id, not mine for all contacts
@@ -276,7 +292,7 @@ Person.prototype.attachContactToPerson = function () {
       'status': cStatuses[cStatusVal],
       'method': cMethods[cMethodVal],
       'type_id': cTypes['Voter outreach election'],
-      'note': cNoteVal 
+      'note': 'TEST: ' + cNoteVal 
     }
   };
 
@@ -303,132 +319,3 @@ Person.prototype.attachContactToPerson = function () {
     console.log(pBody);
   });
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//JUNK FOR NOW
-/*
-function addTagToAllPeopleInList(list_id, options) {
-  //nb recently made it easy to bulk add tag and bulk delete tags for many ppl.
-  //it is base on lists so the api endpoints are:
-  //
-  //add :tag to all ppl in :listId
-  //POST /lists/:listId/tag/:tag
-  //
-  //remove :tag from all ppl in :listId
-  //DELETE /lists/:listId/tag/:tag
-  //
-  //add :tag to all ppl in :listId
-  //POST /lists/:listId/tag/:tag
-  //
-  var addTagsUrl = NB_BASE_URL + NB_LISTS + '/' + list_id + '/tag/' + options.tag;
-
-  var reqObjAddTags = {
-    url: addTagsUrl,
-    qs: {
-      'access_token': NB_TOKEN
-    },
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'accept' :'application/json'
-    }
-  };
-
-  request(reqObjAddTags, function (err, resp, body) {
-    if (err) throw err;
-    console.log('NB should respond with a 204...');
-    console.log(resp.statusCode);
-    console.log('ADDED tag: ' + options.tag + 'to list: ' + list_id);
-  });
-}
-
-
-function deleteTagToAllPeopleInList(list_id, options) {
-  //nb recently made it easy to bulk add tag and bulk delete tags for many ppl.
-  //it is base on lists so the api endpoints are:
-  //remove :tag from all ppl in :listId
-  //DELETE /lists/:listId/tag/:tag
-  
-  var addTagsUrl = NB_BASE_URL + NB_LISTS + '/' + list_id + '/tag/' + options.tag;
-  var reqObjAddTags = {
-    url: addTagsUrl,
-    qs: {
-      'access_token': NB_TOKEN
-    },
-    method: 'DELETE',
-    headers: {
-      'content-type': 'application/json',
-      'accept' :'application/json'
-    }
-  };
-
-  request(reqObjAddTags, function (err, resp, body) {
-    if (err) throw err;
-    console.log('NB should respond with a 204...');
-    console.log(resp.statusCode);
-    console.log('DELETED the tag: ' + options.tag + ' for list_id: ' + list_id);
-  });
-}
-
-
-
-
-//OLDER INDIVIDUAL STUFF
-function tagsForPerson(person_id) {
-  var taggings_url = NB_BASE_URL + NB_PEOPLE + '/' + person_id + '/taggings';
-  console.log(taggings_url);
-
-  var reqObj = {
-    url: taggings_url,
-    qs: {
-      'access_token': NB_TOKEN
-    },
-    method: 'GET',
-    headers: {
-      'content-type': 'application/json',
-      'accept' :'application/json'
-    }
-  };
-  request(reqObj, function (err, resp, body) {
-    if (err) throw err;
-    console.log(resp.statusCode);
-    console.log(body);
-  });
-}
-
-function addATagToAPerson(person_id, tag, i) {
-  var taggings_url = NB_BASE_URL + NB_PEOPLE + '/' + person_id + '/taggings';
-  var reqObjPost = {
-    url: taggings_url,
-    qs: {
-      'access_token': NB_TOKEN
-    },
-    method: 'PUT',
-    headers: {
-      'content-type': 'application/json',
-      'accept' :'application/json'
-    },
-    body : JSON.stringify({
-      'tagging': {'tag': tag}
-    })
-  };
-  request(reqObjPost, function (err, resp, body) {
-    if (err) throw err;
-    console.log('response: ' + resp.statusCode);
-    console.log(i + '. TAGGED (' + person_id + '): ' + tag);
-    //console.log(body);
-  });
-}
-*/

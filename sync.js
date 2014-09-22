@@ -42,9 +42,9 @@ function init() {
   var gopherOptions = {
     'nb_token': NB_TOKENS[0],
     'nb_ids': [NB_ANDRE_ID],
-    'tag': 'SYNC_GVIRStoNB_personCreated_200914',
+    'tag': 'SYNC_GVIRStoNB_personCreated_220914',
     'list' : {
-      'list_name' : 'wv_der_test_2',
+      'list_name' : 'wv_der_test_1',
       'author_id': NB_ANDRE_ID
     }
   };
@@ -56,7 +56,7 @@ function init() {
 
     startSync({
       'listObj': listObj,
-      'tag': 'SYNC_GVIRStoNB_personCreated_200914'
+      'tag': 'SYNC_GVIRStoNB_personCreated_220914'
     });
   });
 }
@@ -71,7 +71,7 @@ function startSync(options) {
       //console.dir(pData[0]); //these are headers
 
       var actualTokenIndex = 0;
-      for (var i = 1; i <= 100; i++) {
+      for (var i = 1; i <= 3; i++) {
         if (i % 200 === 0) {
 	  actualTokenIndex++;
 	  if (actualTokenIndex === NB_TOKENS.length) {
