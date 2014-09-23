@@ -2,6 +2,7 @@
 
 var request = require('request');
 var _ = require('lodash');
+var chalk = require('chalk');
 
 module.exports.Person = Person;
 
@@ -241,8 +242,9 @@ Person.prototype.createPersonOnNB = function () {
     if (err) throw err;
     if (resp.statusCode !== 201) throw Error('create person resp: ' + resp.statusCode);
     var pBody = JSON.parse(body);
-    console.log('CREATED (' + pBody.person.id + '): ' + pBody.person.first_name 
-      + ' ' + pBody.person.last_name + ' for gvirs contact_id: ' + contact_id);
+    var logString = 'CREATED (' + pBody.person.id + '): ' + pBody.person.first_name 
+      + ' ' + pBody.person.last_name + ' for gvirs contact_id: ' + contact_id;
+    chalk.blue(logString);
     
     //IMPORTANT: now we have successfully create a new NB person we MUST set their
     //nationbuilder_id for this person instance
@@ -387,7 +389,8 @@ Person.prototype.attachContactToPerson = function () {
   request(contactsObj, function (err, resp, body) {
     if (err) throw err;
     var pBody = JSON.parse(body);
-    console.log('resp.statusCode: ' + resp.statusCode + '. CONTACT CREATED:');
+    var logString = 'resp.statusCode: ' + resp.statusCode + '. CONTACT CREATED:';
+    chalk.green(logString);
     console.log(pBody);
   });
 }

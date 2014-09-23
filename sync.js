@@ -11,6 +11,8 @@ var fs = require('fs');
 var request = require('request');
 var csv = require('csv');
 var _ = require('lodash');
+var chalk = require('chalk');
+
 var Person = require('./person').Person;
 var Gopher = require('./gopher').Gopher;
 
@@ -58,8 +60,7 @@ function init() {
 
     startSync({
       'listObj': listObj,
-
-      'tag': 'SYNC_GVIRStoNB_22_SEPT_2014'
+      'tag': 'SYNC_GVIRStoNB_wv'
     });
   });
 }
@@ -82,12 +83,12 @@ function startSync(options) {
         if (index === totalNumberOfPpl) {
           return;	
 	} else {
-          setTimeout(littleCall, 1000);	
+          setTimeout(littleCall, 10000);	
 	} 
       
 	function littleCall() {
-          if (index % 90 === 0) {
-  	    console.log('*** switching tokens ***');
+          if (index % 60 === 0) {
+  	    chalk.red('*** switching tokens ***');
   	    actualTokenIndex++;
   	    if (actualTokenIndex === NB_TOKENS.length) {
   	      throw error('ran out of tokens. you need to add more to .nb_tokens file'); 
@@ -97,7 +98,7 @@ function startSync(options) {
           options['headers']       = pData[0];
           options['gvirsPerson']   = pData[index];
   	  options['NB_ANDRE_ID']   = NB_ANDRE_ID;
-  	  options['syncDate']      = '22_SEPT_2014';
+  	  options['syncDate']      = '23_SEPT_2014';
     
           var aPerson = new Person(options);
           aPerson.syncToNB();
