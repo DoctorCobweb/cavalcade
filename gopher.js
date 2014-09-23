@@ -34,20 +34,6 @@ Gopher.prototype.getContactsUrl = function (person_id) {
   return (this.NB_BASE_URL + this.NB_PEOPLE + '/' + person_id + '/contacts');
 };
 
-Gopher.prototype.tagAll = function () {
-  //TODO
-  //create a new list
-  //add nb_ids to list
-  //add tags to all peopl in list
-
-  this.createList();
-};
-
-Gopher.prototype.attachContacts = function () {
-  //TODO
-  console.log('TODO: Gopher attachContacts');
-};
-
 Gopher.prototype.createList = function (callback) {
   var newListBody = {
     'list': {
@@ -171,87 +157,3 @@ Gopher.prototype.deleteTagToAllPeopleInList = function (list_id) {
   });
 };
 
-Gopher.prototype.attachContactsToPerson = function (person_id) {
-  var cTypes = {
-    'Volunteer recruitment': 6,
-    'Supporter Event Invitation': 21,
-    'Voter persuasion': 14,
-    'Volunteer intake': 2,
-    'Donation thank-you': 15,
-    'Donation request': 16,
-    'Event confirmation': 17,
-    'Event debrief': 18,
-    'Meeting 1:1': 19,
-    'Inbox response': 1,
-    'Voter outreach election': 13,
-    'Voter outreach issue': 4
-  };											      
-  var cMethods = {
-    'Delivery': 'delivery', 
-    'Door knock': 'door_knock',
-    'Email': 'email',
-    'Email blast': 'email_blast',
-    'Face to face': 'face_to_face',
-    'Facebook': 'facebook',
-    'Meeting': 'meeting',
-    'Phone call': 'phone_call',
-    'Robocall': 'robocall',
-    'Snail mail': 'snail_mail',
-    'Text': 'text',
-    'Text blast': 'text_blast',
-    'Tweet': 'tweet',
-    'Video call': 'video_call',
-    'Webinar': 'webinar',
-    'LinkedIn': 'linkedin',
-    'other': 'other'
-  };
-
-
-  var cStatuses = {
-    'Answered': 'answered',
-    'Bad info': 'bad_info',
-    'Inaccessible': 'inaccessible',
-    'Left message': 'left_message',
-    'Meaningful interaction': 'meaningful_interaction',
-    'Not interested': 'not_interested',
-    'No answer': 'no_answer',
-    'Refused': 'refused',
-    'Send information': 'send_information',
-    'other': 'other'
-  };
-
-  var contactData = {
-    'contact': {
-      'sender_id': 1149870,
-      'status': cStatuses['Answered'],
-      'method': cMethods['Door knock'],
-      'type_id': cTypes['Voter outreach election'],
-      'note': 'SYNC_1: this is a TEST for SYNC_gVIRS->NB door knock contact' 
-    }
-  };
-
-  var contactsObj = {
-    url: this.getContactsUrl(),
-    qs: {
-      'access_token': this.accessToken() 
-    },
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'accept' :'application/json'
-    },
-    body : JSON.stringify(contactData)
-  };
-
-  console.log('attaching a contact to person_id: ' + person_id);
-  function cb(err, resp, body) {
-    if (err) throw err;
-    console.log('resp.statusCode: ' + resp.statusCode);
-    //body is a JSON string, we want an object.
-    var pBody = JSON.parse(body);
-    console.log('CONTACT CREATED(' + person_id + '):');
-    console.log(pBody);
-  }
-  var cb_bound = cb.bind(this);
-  request(contactsObj, cb_bound);
-};

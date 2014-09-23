@@ -393,12 +393,15 @@ Person.prototype.attachContactToPerson = function () {
 
   console.log(this.iNo + ' attaching a contact to person_id: ' + this.nationbuilder_id);
 
-  request(contactsObj, function (err, resp, body) {
+  function cb (err, resp, body) {
     if (err) throw err;
     var pBody = JSON.parse(body);
     var logString = chalk.cyan('=====> ') + this.iNo + ' resp.statusCode: ' 
       + resp.statusCode + '. CONTACT CREATED:';
-    console.log(chalk.green(logString));
+    console.log(chalk.bgYellow(logString));
     console.log(pBody);
-  });
+  }
+  
+  var bound_cb = cb.bind(this);
+  request(contactsObj, bound_cb);
 }

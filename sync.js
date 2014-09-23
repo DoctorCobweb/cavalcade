@@ -16,6 +16,7 @@ var chalk = require('chalk');
 var Person = require('./person').Person;
 var Gopher = require('./gopher').Gopher;
 
+var NB_INTERVAL = 1000;
 var NB_TOKENS = [];
 var NB_ANDRE_ID = 1149870;
 var NB_ACCESS_TOKEN_FILE  = process.cwd() + '/.nb_tokens';
@@ -83,13 +84,17 @@ function startSync(options) {
         if (index === totalNumberOfPpl) {
           return;	
 	} else {
-          setTimeout(littleCall, 10000);	
+          setTimeout(littleCall, NB_INTERVAL);	
 	} 
       
 	function littleCall() {
           if (index % 60 === 0) {
-  	    console.log(chalk.red('*** switching tokens ***'));
   	    actualTokenIndex++;
+
+	    var logString = '*** switching tokens *** =====> ' + 'actualTokenIndexl: ' 
+	      + actualTokenIndex;
+  	    console.log(chalk.red(logString));
+
   	    if (actualTokenIndex === NB_TOKENS.length) {
   	      throw error('ran out of tokens. you need to add more to .nb_tokens file'); 
   	    }
@@ -107,31 +112,6 @@ function startSync(options) {
 	  return indivCall(index + 1); 
 	}
       }
-
-
-      /*
-      var actualTokenIndex = 0;
-      for (var i = 1; i < pData.length; i++) {
-        if (i % 90 === 0) {
-	  console.log('*** switching tokens ***');
-	  actualTokenIndex++;
-	  if (actualTokenIndex === NB_TOKENS.length) {
-	    throw error('ran out of tokens. you need to add more to .nb_tokens file'); 
-	  }
-	}
-
-        options['NB_TOKEN']      = NB_TOKENS[actualTokenIndex];
-        options['headers']       = pData[0];
-        options['gvirsPerson']   = pData[i];
-	options['NB_ANDRE_ID']   = NB_ANDRE_ID;
-	options['syncDate']      = '22_SEPT_2014';
-  
-        var aPerson = new Person(options);
-        aPerson.syncToNB();
-      }
-      */
-
-
     });
   });
 }
