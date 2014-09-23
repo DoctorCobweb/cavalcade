@@ -88,7 +88,7 @@ function startSync(options) {
       
 	function littleCall() {
           if (index % 60 === 0) {
-  	    chalk.red('*** switching tokens ***');
+  	    console.log(chalk.red('*** switching tokens ***'));
   	    actualTokenIndex++;
   	    if (actualTokenIndex === NB_TOKENS.length) {
   	      throw error('ran out of tokens. you need to add more to .nb_tokens file'); 
@@ -99,6 +99,7 @@ function startSync(options) {
           options['gvirsPerson']   = pData[index];
   	  options['NB_ANDRE_ID']   = NB_ANDRE_ID;
   	  options['syncDate']      = '23_SEPT_2014';
+	  options['instance_no']   = index;
     
           var aPerson = new Person(options);
           aPerson.syncToNB();
