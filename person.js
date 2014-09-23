@@ -57,8 +57,9 @@ Person.prototype.syncToNB = function () {
   //there's no use logging an empty contact so skip everything if so.
   if (this.isContactEmpty()) {
     var contact_id = this.gvirsPerson[this.gIndexes.gvirsContactIdIdx];
-    console.log(this.iNo + ' EMPTY CONTACT. ABORT EVERYTHING for GVIRS contact_id:' 
-		+ contact_id);
+    var logString = chalk.cyan('=====> ') + this.iNo 
+      + ' EMPTY CONTACT. ABORT EVERYTHING for GVIRS contact_id:' + contact_id
+    console.log(logString);
     return;
   }
 
@@ -79,8 +80,9 @@ Person.prototype.updatePersonOnNB = function () {
   //only add them to list and attach the contact to their profile
 
   if (this.isANbContactAlreadyAttached()) {
-    console.log(this.iNo + ' this.nationbuilder_Id: ' + this.nationbuilder_id 
-		+ ' ALREADY IN NB & HAS THIS CONTACT LOGGED.Skip.');
+    var logString = chalk.cyan('=====> ') + this.iNo + ' this.nationbuilder_Id: ' 
+      + this.nationbuilder_id + ' ALREADY IN NB & HAS THIS CONTACT LOGGED.Skip.'
+    console.log(logString);
     return; 
   } else {
     var bound_cb = cb.bind(this);
@@ -89,8 +91,9 @@ Person.prototype.updatePersonOnNB = function () {
 
   function cb (err, tagResp) {
     if (err) throw err;
-    console.log(this.iNo + ' person already on NB. tagging..');
-    console.log(this.iNo + ' TAGGED. this.nationbuilder_id: ' + this.nationbuilder_id);
+    console.log(chalk.cyan('=====> ') + this.iNo + ' person already on NB. tagging..');
+    console.log(chalk.cyan('=====> ') + this.iNo + ' TAGGED. this.nationbuilder_id: ' 
+      + this.nationbuilder_id);
     this.addPersonToList();
   }
 };
@@ -225,7 +228,8 @@ Person.prototype.makeNBDetails = function () {
 
 Person.prototype.createPersonOnNB = function () {
   var contact_id = this.gvirsPerson[this.gIndexes.gvirsContactIdIdx];
-  console.log(this.iNo + ' createPersonOnNB for contact_id: ' + contact_id);
+  console.log(chalk.cyan('=====> ') + this.iNo + ' createPersonOnNB for contact_id: ' 
+    + contact_id);
 
   var peopleObj = {
     url: this.getPeopleUrl(),
@@ -244,8 +248,8 @@ Person.prototype.createPersonOnNB = function () {
     if (err) throw err;
     if (resp.statusCode !== 201) throw Error('create person resp: ' + resp.statusCode);
     var pBody = JSON.parse(body);
-    var logString = this.iNo +  ' CREATED (' + pBody.person.id + '): ' 
-      + pBody.person.first_name + ' ' + pBody.person.last_name 
+    var logString = chalk.cyan('=====> ') + this.iNo +  ' CREATED (' + pBody.person.id 
+      + '): ' + pBody.person.first_name + ' ' + pBody.person.last_name 
       + ' for gvirs contact_id: ' + contact_id;
     console.log(chalk.blue(logString));
     
@@ -279,8 +283,8 @@ Person.prototype.addPersonToList = function () {
     if (err) throw err;
     if (resp.statusCode !== 200) throw Error('add person list resp: ' + resp.statusCode);
     var pBody = JSON.parse(body);
-    console.log(this.iNo + ' ADDED PERSON ' + this.nationbuilder_id + ' TO LIST: ' 
-      + pBody.list_resource.id);
+    console.log(chalk.cyan('=====> ') + this.iNo + ' ADDED PERSON ' 
+      + this.nationbuilder_id + ' TO LIST: ' + pBody.list_resource.id);
     this.attachContactToPerson();
   }
   var cb_bound = cb.bind(this);
@@ -356,7 +360,7 @@ Person.prototype.attachContactToPerson = function () {
   if (cStatusVal === 'Busy') {
     cNoteVal = 'Busy. ' + cNoteVal;
   }
-  cNoteVal = '[.::SYNC::.::gVIRS->NB::.::' + this.syncDate + '::.] =====> ' 
+  cNoteVal = '[.::SYNC::.::gVIRS->NB::.::' + this.syncDate + '::.] =====>' 
 	     + ' [.::gVIRS_CONTACT_DATE::.] = ' 
 	     + this.gvirsPerson[this.gIndexes.contactDateIdx]
 	     + ' [.::gVIRS_CONTACT_ID::.] = '
@@ -392,8 +396,8 @@ Person.prototype.attachContactToPerson = function () {
   request(contactsObj, function (err, resp, body) {
     if (err) throw err;
     var pBody = JSON.parse(body);
-    var logString = this.iNo + ' resp.statusCode: ' + resp.statusCode 
-      + '. CONTACT CREATED:';
+    var logString = chalk.cyan('=====> ') + this.iNo + ' resp.statusCode: ' 
+      + resp.statusCode + '. CONTACT CREATED:';
     console.log(chalk.green(logString));
     console.log(pBody);
   });
