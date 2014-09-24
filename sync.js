@@ -47,7 +47,7 @@ function init() {
   var gopherOptions = {
     'nb_token': NB_TOKENS[0],
     'nb_ids': [NB_ANDRE_ID],
-    'tag': 'SYNC_GVIRStoNB_personCreated_220914',
+    'tag': 'SYNC_GVIRStoNB_personCreated_240914',
     'list' : {
       'list_name' : 'wv_der_test_' + Math.floor(Math.random() * 1000),
       'author_id': NB_ANDRE_ID
@@ -61,7 +61,7 @@ function init() {
 
     startSync({
       'listObj': listObj,
-      'tag': 'SYNC_GVIRStoNB_wv'
+      'tag': 'SYNC_GVIRStoNB_wv_1'
     });
   });
 }
@@ -88,10 +88,10 @@ function startSync(options) {
 	} 
       
 	function littleCall() {
-          if (index % 60 === 0) {
+          if (index % 50 === 0) {
   	    actualTokenIndex++;
 
-	    var logString = '*** switching tokens *** =====> ' + 'actualTokenIndexl: ' 
+	    var logString = '*** switching tokens *** =====> ' + 'actualTokenIndex: ' 
 	      + actualTokenIndex;
   	    console.log(chalk.red(logString));
 
@@ -103,7 +103,7 @@ function startSync(options) {
           options['headers']       = pData[0];
           options['gvirsPerson']   = pData[index];
   	  options['NB_ANDRE_ID']   = NB_ANDRE_ID;
-  	  options['syncDate']      = '23_SEPT_2014';
+  	  options['syncDate']      = '24_SEPT_2014';
 	  options['instance_no']   = index;
     
           var aPerson = new Person(options);

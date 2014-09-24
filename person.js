@@ -220,6 +220,8 @@ Person.prototype.makeNBDetails = function () {
       //'electorate_state_lower': this.gvirsPerson[this.gIndexes.elecStateLowerIdx],
       //'electorate_federal': this.gvirsPerson[this.gIndexes.elecFedIdx], 
       //'lga': this.gvirsPerson[this.gIndexes.lgaIdx],
+
+      'electorate_state_upper': 'Western Victoria',
       'tags': [this.tag],
       'support_level' : supportLevel 
     };
