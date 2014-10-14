@@ -30,6 +30,9 @@ function Person (options) {
   //do some initial setup
   this.gvirsIndexes();
   this.makeNBDetails();
+  console.log(this.gvirsPerson);
+  console.log('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^');
+  console.log(this.NBPerson);
 };
 
 Person.prototype.getPeopleUrl = function () {
@@ -51,8 +54,8 @@ Person.prototype.getTaggingsUrl = function () {
 };
 
 Person.prototype.syncToNB = function () {
-  this.gIndexes.hasNBMatchIdx = this.headers.indexOf('has_nb_match');
-  this.gIndexes.nationbuilderIdIdx = this.headers.indexOf('nationbuilder_id');
+  //this.gIndexes.hasNBMatchIdx = this.headers.indexOf('has_nb_match');
+  //this.gIndexes.nationbuilderIdIdx = this.headers.indexOf('nationbuilder_id');
 
   //there's no use logging an empty contact so skip everything if so.
   if (this.isContactEmpty()) {
@@ -71,7 +74,9 @@ Person.prototype.syncToNB = function () {
     var nbIdInteger = parseInt(this.gvirsPerson[this.gIndexes.nationbuilderIdIdx], 10);
     this.person_method = 'PUT';
     this.nationbuilder_id = nbIdInteger;
-    this.updatePersonOnNB(); 
+
+    console.log(chalk.bgRed('skipping PUT for now'))
+    //this.updatePersonOnNB(); 
   }
 };
 
@@ -145,53 +150,50 @@ Person.prototype.tagPerson = function (callback) {
 };
   
 Person.prototype.gvirsIndexes = function () {
-  this.gIndexes.firstNameIdx = this.headers.indexOf('first_name');
-  this.gIndexes.otherNamesIdx = this.headers.indexOf('other_names');
-  this.gIndexes.surnameIdx = this.headers.indexOf('surname');
-  this.gIndexes.dobIdx = this.headers.indexOf('dob');
-  this.gIndexes.genderIdx = this.headers.indexOf('sex');
-  this.gIndexes.combStreetAddIdx = this.headers.indexOf('combined_street_address');
-  this.gIndexes.flatNumIdx = this.headers.indexOf('flat_no');
-  this.gIndexes.localityIdx = this.headers.indexOf('locality_name');
-  this.gIndexes.postcodeIdx = this.headers.indexOf('postcode');
-  this.gIndexes.stateIdx = this.headers.indexOf('state_abbreviation');
-  this.gIndexes.contactDateIdx = this.headers.indexOf('contact_date');
-  this.gIndexes.contactStatusIdx = this.headers.indexOf('contact_status_name');
-  this.gIndexes.contactMethodIdx = this.headers.indexOf('contact_method_name');
-  this.gIndexes.contactNoteIdx = this.headers.indexOf('notes');
-  this.gIndexes.supportLevelIdx = this.headers.indexOf('support_level');
-  this.gIndexes.contactDateIdx = this.headers.indexOf('contact_date');
-  this.gIndexes.gvirsContactIdIdx = this.headers.indexOf('contact_id');
-  //TODO: custom contact csv
-  //need this in contacts csv. 
-  //this.gIndexes.phoneNumsIdx = this.headers.indexOf('phone_numbers');
-  //this.gIndexes.elecStateUpperIdx = this.headers.indexOf('custom_uh_region');
-  //this.gIndexes.elecStateLowerIdx = this.headers.indexOf('custom_lh_district');
-  //this.gIndexes.elecFedIdx = this.headers.indexOf('custom_fed_elect');
-  //this.gIndexes.lgaIdx = this.headers.indexOf('local_gov_area');
-  //this.gIndexes.customTargetIdx = this.headers.indexOf('custom_target');
-  //this.gIndexes.emailIdx = this.headers.indexOf('email');
+  this.gIndexes.firstNameIdx        = this.headers.indexOf('first_name');
+  this.gIndexes.otherNamesIdx       = this.headers.indexOf('other_names');
+  this.gIndexes.surnameIdx          = this.headers.indexOf('surname');
+  this.gIndexes.dobIdx              = this.headers.indexOf('dob');
+  this.gIndexes.genderIdx           = this.headers.indexOf('sex');
+  this.gIndexes.combStreetAddIdx    = this.headers.indexOf('combined_street_address');
+  this.gIndexes.flatNumIdx          = this.headers.indexOf('flat_no');
+  this.gIndexes.localityIdx         = this.headers.indexOf('locality_name');
+  this.gIndexes.postcodeIdx         = this.headers.indexOf('postcode');
+  this.gIndexes.stateIdx            = this.headers.indexOf('state_abbreviation');
+  this.gIndexes.contactDateIdx      = this.headers.indexOf('contact_date');
+  this.gIndexes.contactStatusIdx    = this.headers.indexOf('contact_status_name');
+  this.gIndexes.contactMethodIdx    = this.headers.indexOf('contact_method_name');
+  this.gIndexes.contactNoteIdx      = this.headers.indexOf('notes');
+  this.gIndexes.supportLevelIdx     = this.headers.indexOf('support_level');
+  this.gIndexes.contactDateIdx      = this.headers.indexOf('contact_date');
+  this.gIndexes.gvirsContactIdIdx   = this.headers.indexOf('contact_id');
+  this.gIndexes.hasNBMatchIdx       = this.headers.indexOf('has_nb_match');
+  this.gIndexes.nationbuilderIdIdx  = this.headers.indexOf('nationbuilder_id');
+
+  //new
+  this.gIndexes.phoneNumsIdx       = this.headers.indexOf('phone_numbers');
+  this.gIndexes.elecStateUpperIdx  = this.headers.indexOf('state_uh_region');
+  this.gIndexes.elecStateLowerIdx  = this.headers.indexOf('state_lh_district');
+  this.gIndexes.targetIdx          = this.headers.indexOf('target');
+  this.gIndexes.absSa1Idx          = this.headers.indexOf('sa1');
+  this.gIndexes.absMeshBlockIdx    = this.headers.indexOf('meshblock');
+  this.gIndexes.voterListNameIdx   = this.headers.indexOf('voter_list_name');
 };
 
 Person.prototype.makeNBDetails = function () {
-  var supportLevel;
-
-  //TODO: custom contact csv
-  /*
-  var extractedPhoneNum = '';
-  var phoneField = this.gvirsPerson[this.gIndexes.phoneNumsIdx];
+  var supportLevel,
+    extractedPhoneNum = '',
+    phoneField = this.gvirsPerson[this.gIndexes.phoneNumsIdx];
 
   if (phoneField.indexOf('"') !== -1) {
     //if there's quotation marks then there should be a phonenumber present 
     //find the indexes of first two quotation marks. the phonenumber is inbetween.
     //current method ignores multiple phone numbers. 
-
     var firstQuotationIdx = phoneField.indexOf('"');
     var secondQuotationIdx = phoneField.indexOf('"', firstQuotationIdx + 1);
     extractedPhoneNum = phoneField.substring(firstQuotationIdx + 1, secondQuotationIdx);
     extractedPhoneNum = extractedPhoneNum.split(' ').join('');
   }
-  */
 
   //gvirs and NB support level mismatch.
   //gvirs(0) => NB(null)
@@ -200,30 +202,28 @@ Person.prototype.makeNBDetails = function () {
   }
 
   this.NBPerson.person = {
-      'first_name': this.gvirsPerson[this.gIndexes.firstNameIdx], 
-      'middle_name': this.gvirsPerson[this.gIndexes.otherNamesIdx], 
-      'last_name': this.gvirsPerson[this.gIndexes.surnameIdx], 
-      'birthdate': this.gvirsPerson[this.gIndexes.dobIdx],
-      'sex': this.gvirsPerson[this.gIndexes.genderIdx],
-      'registered_address' : {
+      'first_name'              : this.gvirsPerson[this.gIndexes.firstNameIdx], 
+      'middle_name'             : this.gvirsPerson[this.gIndexes.otherNamesIdx], 
+      'last_name'               : this.gvirsPerson[this.gIndexes.surnameIdx], 
+      'birthdate'               : this.gvirsPerson[this.gIndexes.dobIdx],
+      'sex'                     : this.gvirsPerson[this.gIndexes.genderIdx],
+      'tags'                    : [this.tag],
+      'support_level'           : supportLevel,
+      'registered_address'      : {
         'address1': this.gvirsPerson[this.gIndexes.combStreetAddIdx],
         'address2': this.gvirsPerson[this.gIndexes.flatNumIdx],
-        'city': this.gvirsPerson[this.gIndexes.localityIdx],
-        'state': this.gvirsPerson[this.gIndexes.stateIdx].toUpperCase(),
-        'zip': this.gvirsPerson[this.gIndexes.postcodeIdx] 
+        'city'    : this.gvirsPerson[this.gIndexes.localityIdx],
+        'state'   : this.gvirsPerson[this.gIndexes.stateIdx].toUpperCase(),
+        'zip'     : this.gvirsPerson[this.gIndexes.postcodeIdx] 
       },
-      //TODO: custom contact csv
-      //'email': this.gvirsPerson[this.gIndexes.emailIdx], 
-      //'mobile': extractedPhoneNum, 
-      //'custom_target': this.gvirsPerson[this.gIndexes.customTargetIdx],
-      //'electorate_state_upper': this.gvirsPerson[this.gIndexes.elecStateUpperIdx],
-      //'electorate_state_lower': this.gvirsPerson[this.gIndexes.elecStateLowerIdx],
-      //'electorate_federal': this.gvirsPerson[this.gIndexes.elecFedIdx], 
-      //'lga': this.gvirsPerson[this.gIndexes.lgaIdx],
 
-      'electorate_state_upper': 'Western Victoria',
-      'tags': [this.tag],
-      'support_level' : supportLevel 
+      //new
+      'phone'                 : extractedPhoneNum, 
+      'target'                : this.gvirsPerson[this.gIndexes.targetIdx],
+      'electorate_state_upper': this.gvirsPerson[this.gIndexes.elecStateUpperIdx],
+      'electorate_state_lower': this.gvirsPerson[this.gIndexes.elecStateLowerIdx],
+      'abs_sa1'               : this.gvirsPerson[this.gIndexes.absSa1Idx],
+      'abs_mesh_block_code'   : this.gvirsPerson[this.gIndexes.absMeshBlockIdx],
     };
 };
 
@@ -350,7 +350,7 @@ Person.prototype.attachContactToPerson = function () {
   //gvirs(busy)-> nb(answered)
   //ask lloyd davies for further info if need be
   var cStatuses = {
-    'Answered': 'meaningful_interaction',
+    'Meaningful Interaction': 'meaningful_interaction',
     'Busy': 'answered' //NB does not have Busy but gvirs does => default it to 'other'
   };
 
@@ -367,11 +367,13 @@ Person.prototype.attachContactToPerson = function () {
 	     + this.gvirsPerson[this.gIndexes.contactDateIdx]
 	     + ' [.::gVIRS_CONTACT_ID::.] = '
              + this.gvirsPerson[this.gIndexes.gvirsContactIdIdx]
+	     + ' [.::gVIRS_VOTER_LIST_NAME::.] = '
+	     + this.gvirsPerson[this.gIndexes.voterListNameIdx]
 	     + ' [.::gVIRS_NOTE::.] = ' + cNoteVal;
+
 
   var contactData = {
     'contact': {
-      //TODO: change to data_entry person's id, not mine for all contacts
       'sender_id': this.NB_ANDRE_ID,
       'status': cStatuses[cStatusVal],
       'method': cMethods[cMethodVal],

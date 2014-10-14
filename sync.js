@@ -20,9 +20,9 @@ var NB_INTERVAL = 1000;
 var NB_TOKENS = [];
 var NB_ANDRE_ID = 1149870;
 var NB_ACCESS_TOKEN_FILE  = process.cwd() + '/.nb_tokens';
-//var GVIRS_PANDAS_ANALYSED_FILE   = process.cwd() + '/gvirs_to_nb_PANDAS_OUT_210914.csv';
-var GVIRS_PANDAS_ANALYSED_FILE   = process.cwd() 
-  + '/gvirs_to_nb_PANDAS_OUT_210914_only_NOs.csv';
+//var GVIRS_PANDAS_ANALYSED_FILE   = process.cwd() 
+//  + '/gvirs_to_nb_PANDAS_OUT_210914_only_NOs.csv';
+var GVIRS_PANDAS_ANALYSED_FILE   = process.cwd() + '/gvirs_to_nb_PANDAS_OUT_141014.csv';
 
 fs.readFile(NB_ACCESS_TOKEN_FILE, {encoding:'utf-8'}, function (err, data) {
   if (err) throw err;
@@ -47,7 +47,7 @@ function init() {
   var gopherOptions = {
     'nb_token': NB_TOKENS[0],
     'nb_ids': [NB_ANDRE_ID],
-    'tag': 'SYNC_GVIRStoNB_personCreated_240914',
+    'tag': 'SYNC_GVIRStoNB_personCreated_141014',
     'list' : {
       'list_name' : 'wv_der_test_' + Math.floor(Math.random() * 1000),
       'author_id': NB_ANDRE_ID
@@ -73,7 +73,7 @@ function startSync(options) {
     csv.parse(data, function (error, pData) {
       if (error) throw error;
       console.log('successfully parsed gvirs pandas analysed file');  
-      //console.dir(pData[0]); //these are headers
+      console.dir(pData[0]); //these are headers
 
       var actualTokenIndex = 0;
       var totalNumberOfPpl = pData.length - 1;
@@ -103,11 +103,11 @@ function startSync(options) {
           options['headers']       = pData[0];
           options['gvirsPerson']   = pData[index];
   	  options['NB_ANDRE_ID']   = NB_ANDRE_ID;
-  	  options['syncDate']      = '24_SEPT_2014';
+  	  options['syncDate']      = '14_OCT_2014';
 	  options['instance_no']   = index;
     
           var aPerson = new Person(options);
-          aPerson.syncToNB();
+          //aPerson.syncToNB();
 
 	  return indivCall(index + 1); 
 	}

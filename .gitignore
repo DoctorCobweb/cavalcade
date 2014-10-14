@@ -1,6 +1,7 @@
 *.csv
 *.txt
 /node_modules
+/follow_ups
 .nb_tokens
 .env
 *.swp
