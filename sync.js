@@ -13,6 +13,7 @@ var csv = require('csv');
 var _ = require('lodash');
 var chalk = require('chalk');
 
+
 var Person = require('./person').Person;
 var Gopher = require('./gopher').Gopher;
 var NB_TAG = 'SYNC_GVIRStoNB_wv_4';
