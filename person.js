@@ -30,9 +30,6 @@ function Person (options) {
   //do some initial setup
   this.gvirsIndexes();
   this.makeNBDetails();
-  console.log(this.gvirsPerson);
-  console.log('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^');
-  console.log(this.NBPerson);
 };
 
 Person.prototype.getPeopleUrl = function () {
@@ -74,8 +71,6 @@ Person.prototype.syncToNB = function () {
     var nbIdInteger = parseInt(this.gvirsPerson[this.gIndexes.nationbuilderIdIdx], 10);
     this.person_method = 'PUT';
     this.nationbuilder_id = nbIdInteger;
-
-    console.log(chalk.bgRed('skipping PUT for now'))
     //this.updatePersonOnNB(); 
   }
 };
@@ -182,18 +177,52 @@ Person.prototype.gvirsIndexes = function () {
 
 Person.prototype.makeNBDetails = function () {
   var supportLevel,
-    extractedPhoneNum = '',
-    phoneField = this.gvirsPerson[this.gIndexes.phoneNumsIdx];
+    phoneField = this.gvirsPerson[this.gIndexes.phoneNumsIdx],
+    phoneObj = {},
+    phoneSplit = phoneField.split(',');
 
-  if (phoneField.indexOf('"') !== -1) {
-    //if there's quotation marks then there should be a phonenumber present 
-    //find the indexes of first two quotation marks. the phonenumber is inbetween.
-    //current method ignores multiple phone numbers. 
-    var firstQuotationIdx = phoneField.indexOf('"');
-    var secondQuotationIdx = phoneField.indexOf('"', firstQuotationIdx + 1);
-    extractedPhoneNum = phoneField.substring(firstQuotationIdx + 1, secondQuotationIdx);
-    extractedPhoneNum = extractedPhoneNum.split(' ').join('');
-  }
+  //strip away the { in the first element and } in the last element
+  phoneSplit[0] = phoneSplit[0].slice(1);
+  phoneSplit[phoneSplit.length -1] = phoneSplit[phoneSplit.length -1].slice(0,-1);
+
+  phoneObj = _.reduce(phoneSplit, function (result, val) {
+    var leftQuoteIdx,
+      rightQuoteIdx,
+      extractedNum,
+      firstTwoDigits;
+
+    //if person has more than 1 landline or more that 1 mobile, phoneObj will contain
+    //only last parsed number. currently does not handle this case
+    //for now it is just 1 landline, 1 mobile.
+
+    if (val.indexOf('"') !== -1) {
+      leftQuoteIdx = val.indexOf('"'); 
+      rightQuoteIdx = val.indexOf('"', leftQuoteIdx + 1);
+      extractedNum = val.substring(leftQuoteIdx + 1, rightQuoteIdx);
+      extractedNum = extractedNum.split(' ').join('');
+      firstTwoDigits = extractedNum.slice(0,2);
+
+      //console.log('extractedNum');
+      //console.log(extractedNum);
+
+      if (firstTwoDigits === '03') {
+        result['phone'] = extractedNum; 
+	return result;
+      } else if (firstTwoDigits === '04') {
+        result['mobile'] = extractedNum; 
+	return result;
+      } else {
+	return result;
+      }
+       
+    } else {
+      return result;    
+    }
+  
+  }, {});
+
+  if (phoneObj.phone === undefined) phoneObj.phone = '';
+  if (phoneObj.mobile === undefined) phoneObj.mobile= '';
 
   //gvirs and NB support level mismatch.
   //gvirs(0) => NB(null)
@@ -218,7 +247,9 @@ Person.prototype.makeNBDetails = function () {
       },
 
       //new
-      'phone'                 : extractedPhoneNum, 
+      //'phone'                 : extractedPhoneNum, 
+      'phone'                 : phoneObj.phone, 
+      'mobile'                : phoneObj.mobile, 
       'target'                : this.gvirsPerson[this.gIndexes.targetIdx],
       'electorate_state_upper': this.gvirsPerson[this.gIndexes.elecStateUpperIdx],
       'electorate_state_lower': this.gvirsPerson[this.gIndexes.elecStateLowerIdx],
@@ -248,7 +279,9 @@ Person.prototype.createPersonOnNB = function () {
 
   function cb (err, resp, body) {
     if (err) throw err;
-    if (resp.statusCode !== 201) throw Error('create person resp: ' + resp.statusCode);
+    if (resp.statusCode !== 201) {
+      throw Error('create person resp: ' + resp.statusCode + 'contact_id: ' + contact_id);
+    }
     var pBody = JSON.parse(body);
     var logString = chalk.cyan('=====> ') + this.iNo +  ' CREATED (' + pBody.person.id 
       + '): ' + pBody.person.first_name + ' ' + pBody.person.last_name 
