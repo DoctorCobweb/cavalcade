@@ -181,10 +181,38 @@ Person.prototype.makeNBDetails = function () {
     phoneObj = {},
     phoneSplit = phoneField.split(',');
 
+
   //strip away the { in the first element and } in the last element
   phoneSplit[0] = phoneSplit[0].slice(1);
   phoneSplit[phoneSplit.length -1] = phoneSplit[phoneSplit.length -1].slice(0,-1);
 
+  //console.log('phoneSplit');
+  //console.log(phoneSplit);
+
+  phoneObj.phone = '';
+  phoneObj.mobile = ''; 
+
+  if (phoneSplit.length === 1 && phoneSplit[0] === '') {
+    //do nothing
+  }
+  else {
+    phoneObj = _.reduce(phoneSplit, function (result, val) {
+      var firstTwoDigits = val.slice(0, 2);
+      if (firstTwoDigits === '03') {
+        result.phone = val;  
+      }
+      if (firstTwoDigits === '04') {
+        result.mobile = val;  
+      }
+      return result;
+    }, {});
+  }
+
+  //console.log('phoneObj');
+  //console.log(phoneObj);
+
+  //used for when gvirs export has phone numbers col like {"03 123 14124 ", "041231023"}
+  /*
   phoneObj = _.reduce(phoneSplit, function (result, val) {
     var leftQuoteIdx,
       rightQuoteIdx,
@@ -223,6 +251,8 @@ Person.prototype.makeNBDetails = function () {
 
   if (phoneObj.phone === undefined) phoneObj.phone = '';
   if (phoneObj.mobile === undefined) phoneObj.mobile= '';
+  */
+
 
   //gvirs and NB support level mismatch.
   //gvirs(0) => NB(null)
@@ -263,6 +293,7 @@ Person.prototype.createPersonOnNB = function () {
   var contact_id = this.gvirsPerson[this.gIndexes.gvirsContactIdIdx];
   console.log(chalk.cyan('=====> ') + this.iNo + ' createPersonOnNB for contact_id: ' 
     + contact_id);
+  console.log(this.NBPerson);
 
   var peopleObj = {
     url: this.getPeopleUrl(),
@@ -298,6 +329,7 @@ Person.prototype.createPersonOnNB = function () {
 }
 
 Person.prototype.addPersonToList = function () {
+  var contact_id = this.gvirsPerson[this.gIndexes.gvirsContactIdIdx];
   var body = {
     'people_ids': [this.nationbuilder_id] 
   };
@@ -315,12 +347,16 @@ Person.prototype.addPersonToList = function () {
   };
 
   function cb (err, resp, body) {
+    var errLog = 'addperson list resp: ' + resp.statusCode + 'contact_id: ' + contact_id;
     if (err) throw err;
-    if (resp.statusCode !== 200) throw Error('add person list resp: ' + resp.statusCode);
-    var pBody = JSON.parse(body);
-    console.log(chalk.cyan('=====> ') + this.iNo + ' ADDED PERSON ' 
-      + this.nationbuilder_id + ' TO LIST: ' + pBody.list_resource.id);
-    this.attachContactToPerson();
+    if (resp.statusCode === 200 || resp.statusCode === 204) {
+      var listId = this.listObj.list_resource.id
+      console.log(chalk.cyan('=====> ') + this.iNo + ' ADDED PERSON ' 
+        + this.nationbuilder_id + ' TO LIST: ' + listId);
+      this.attachContactToPerson();
+    } else {
+      throw Error(errLog); 
+    }
   }
   var cb_bound = cb.bind(this);
   request(addToListObj, cb_bound);

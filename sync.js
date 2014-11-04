@@ -16,17 +16,17 @@ var chalk = require('chalk');
 
 var Person = require('./person').Person;
 var Gopher = require('./gopher').Gopher;
-var NB_TAG = 'SYNC_GVIRStoNB_wv_4';
-var SYNC_DATE = '28_OCT_2014';
+var NB_TAG = 'SYNC_GVIRStoNB_wv_5';
+var SYNC_DATE = '04_NOV_2014';
 var NB_INTERVAL = 1000;
 var NB_TOKENS = [];
 var NB_ANDRE_ID = 1149870;
 var NB_ACCESS_TOKEN_FILE  = process.cwd() + '/.nb_tokens';
 //var GVIRS_PANDAS_ANALYSED_FILE   = process.cwd() + '/gvirs_to_nb_PANDAS_OUT_141014.csv';
-//var gvirs_pandas_analysed_file   = process.cwd() 
-//  + '/gvirs_to_nb_PANDAS_OUT_2014-10-21_only_NOs.csv';
-var gvirs_pandas_analysed_file   = process.cwd() 
-  + '/gvirs_to_nb_PANDAS_OUT_2014-10-28_only_NOs_10ppl.csv';
+//var GVIRS_PANDAS_ANALYSED_FILE   = process.cwd() 
+//  + '/gvirs_to_nb_PANDAS_OUT_2014-11-04_only_NOs.csv';
+var GVIRS_PANDAS_ANALYSED_FILE   = process.cwd() 
+  + '/gvirs_to_nb_PANDAS_OUT_2014-11-04_only_NOs_10ppl.csv';
 //var GVIRS_PANDAS_ANALYSED_FILE   = process.cwd() 
 //  + '/gvirs_to_nb_PANDAS_OUT_141014_only_YESs.csv';
 
